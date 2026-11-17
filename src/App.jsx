@@ -10,7 +10,7 @@ import {
   Award,
   Settings,
   Plus,
-  Printer,
+  FileDown,
   Trash2,
   Save,
   RotateCcw,
@@ -30,6 +30,88 @@ import {
 // GANTI TAUTAN INI DENGAN LINK PRODUK LYNK.ID ANDA
 const LYNK_ID_URL = 'https://lynk.id';
 
+// --- FUNGSI EKSPOR DOKUMEN MICROSOFT WORD (.DOC) ---
+const downloadWordDocument = (filename, title, profile, activeClass, bodyHtml) => {
+  const fullHtml = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+          xmlns:w='urn:schemas-microsoft-com:office:word' 
+          xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <meta charset='utf-8'>
+      <title>${title}</title>
+      <style>
+        @page { size: A4; margin: 2cm; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.5; color: #000; }
+        .header-title { text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .header-sub { text-align: center; font-size: 12pt; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11pt; }
+        .meta-table td { padding: 3px 4px; vertical-align: top; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10.5pt; }
+        .data-table th, .data-table td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+        .data-table th { background-color: #f0f4f8; font-weight: bold; text-align: center; }
+        .box-cp { border: 1px solid #000; padding: 10px; background-color: #fafafa; margin-bottom: 14px; text-align: justify; }
+        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 36px; font-size: 11pt; }
+        .ttd-table td { width: 50%; text-align: center; vertical-align: top; }
+      </style>
+    </head>
+    <body>
+      <div class="header-title">${title}</div>
+      <div class="header-sub">${profile.sekolah.toUpperCase()}</div>
+      
+      <table class="meta-table">
+        <tr>
+          <td style="width: 22%;"><strong>Mata Pelajaran</strong></td>
+          <td style="width: 28%;">: ${activeClass.mapel}</td>
+          <td style="width: 22%;"><strong>Tahun Ajaran</strong></td>
+          <td style="width: 28%;">: ${profile.tahunAjaran}</td>
+        </tr>
+        <tr>
+          <td><strong>Kelas / Rombel</strong></td>
+          <td>: ${activeClass.nama}</td>
+          <td><strong>Semester</strong></td>
+          <td>: ${profile.semester}</td>
+        </tr>
+        <tr>
+          <td><strong>Fase Kurikulum</strong></td>
+          <td>: ${activeClass.fase}</td>
+          <td><strong>Guru Pengampu</strong></td>
+          <td>: ${profile.nama}</td>
+        </tr>
+      </table>
+
+      ${bodyHtml}
+
+      <table class="ttd-table">
+        <tr>
+          <td>
+            Mengetahui,<br/>
+            Kepala ${profile.sekolah}<br/><br/><br/><br/>
+            <strong><u>...................................................</u></strong><br/>
+            NIP. ........................................
+          </td>
+          <td>
+            ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br/>
+            Guru Mata Pelajaran<br/><br/><br/><br/>
+            <strong><u>${profile.nama}</u></strong><br/>
+            NIP. ${profile.nip}
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 // --- BANK DATA KURIKULUM MERDEKA LENGKAP (FASE A - F & MULTI MAPEL) ---
 const SUBJECT_BANK = {
   'Bahasa Indonesia': {
@@ -41,8 +123,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Mempresentasikan Karya Tulis dan Mengapresiasi Puisi / Cerpen Secara Lisan', jp: 10, status: 'DRAFT', elemen: 'Berbicara dan Mempresentasikan' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Mengkritisi Informasi pada Teks Berita & Eksplanasi', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Discovery Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Menulis Teks Argumentasi Berbasis Fakta', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Mengkritisi Informasi pada Teks Berita & Eksplanasi', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Discovery Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Menulis Teks Argumentasi Berbasis Fakta', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'Matematika': {
@@ -54,8 +136,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Menganalisis Ukuran Pemusatan Data (Mean, Median, Modus) dan Peluang Empirik', jp: 12, status: 'DRAFT', elemen: 'Analisis Data dan Peluang' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Pemodelan Sistem Persamaan Linear', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (14 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Eksplorasi Bangun Ruang & Pengukuran', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Pemodelan Sistem Persamaan Linear', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (14 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Eksplorasi Bangun Ruang & Pengukuran', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'Bahasa Inggris': {
@@ -67,9 +149,9 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Membuat Pesan Singkat, Pengumuman (Announcement), dan Pemberitahuan (Notice)', jp: 8, status: 'DRAFT', elemen: 'Menulis - Mempresentasikan' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: My Unforgettable Holiday (Recount Text)', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Genre-Based Approach (GBA)', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Telling Past Events with Simple Past Tense', tpKode: 'TP 2.2', pertemuan: '3 Pertemuan (10 JP)', model: 'Discovery Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Indonesian Folktales & Moral Values', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Perlu Review' }
+      { judul: 'Modul Ajar: My Unforgettable Holiday (Recount Text)', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Genre-Based Approach (GBA)', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Telling Past Events with Simple Past Tense', tpKode: 'TP 2.2', pertemuan: '3 Pertemuan (10 JP)', model: 'Discovery Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Indonesian Folktales & Moral Values', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'IPAS (Ilmu Pengetahuan Alam dan Sosial)': {
@@ -81,8 +163,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Memahami Gaya di Sekitar Kita dan Pengaruhnya Terhadap Gerak Benda', jp: 10, status: 'DRAFT', elemen: 'Keterampilan Proses' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Tumbuhan Sumber Kehidupan di Bumi', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (12 JP)', model: 'Inquiry-Based Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Eksperimen Perubahan Wujud Zat', tpKode: 'TP 2.2', pertemuan: '4 Pertemuan (14 JP)', model: 'Experimental Learning', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Tumbuhan Sumber Kehidupan di Bumi', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (12 JP)', model: 'Inquiry-Based Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Eksperimen Perubahan Wujud Zat', tpKode: 'TP 2.2', pertemuan: '4 Pertemuan (14 JP)', model: 'Experimental Learning', status: 'Siap Unduh' }
     ]
   },
   'IPA (Ilmu Pengetahuan Alam)': {
@@ -94,8 +176,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Mengevaluasi Unsur, Senyawa, Campuran, dan Pemisahan Campuran Sederhana', jp: 10, status: 'DRAFT', elemen: 'Keterampilan Proses' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Sistem Organ Manusia & Pola Hidup Sehat', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (14 JP)', model: 'Inquiry-Based Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Praktikum Getaran, Gelombang, dan Cahaya', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Sistem Organ Manusia & Pola Hidup Sehat', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (14 JP)', model: 'Inquiry-Based Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Praktikum Getaran, Gelombang, dan Cahaya', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (14 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Unduh' }
     ]
   },
   'IPS (Ilmu Pengetahuan Sosial)': {
@@ -107,8 +189,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Menelusuri Perkembangan Masyarakat Nusantara pada Masa Kerajaan hingga Kolonial', jp: 12, status: 'DRAFT', elemen: 'Keterampilan Proses' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Potensi Sumber Daya Alam & Kemaritiman Indonesia', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Dinamika Kegiatan Ekonomi & Kewirausahaan', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (12 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Potensi Sumber Daya Alam & Kemaritiman Indonesia', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Dinamika Kegiatan Ekonomi & Kewirausahaan', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (12 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'Pendidikan Pancasila': {
@@ -120,8 +202,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Menunjukkan Komitmen Menjaga Keutuhan Wilayah Negara Kesatuan Republik Indonesia', jp: 8, status: 'DRAFT', elemen: 'NKRI' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Mengamalkan Nilai Pancasila di Lingkungan Sekolah', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (10 JP)', model: 'Value Clarification Technique', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Harmoni dalam Keberagaman Bhinneka Tunggal Ika', tpKode: 'TP 2.3', pertemuan: '3 Pertemuan (10 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Mengamalkan Nilai Pancasila di Lingkungan Sekolah', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (10 JP)', model: 'Value Clarification Technique', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Harmoni dalam Keberagaman Bhinneka Tunggal Ika', tpKode: 'TP 2.3', pertemuan: '3 Pertemuan (10 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'Informatika': {
@@ -133,8 +215,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Mengembangkan Program Sederhana Menggunakan Bahasa Pemrograman Prosedural', jp: 14, status: 'DRAFT', elemen: 'Algoritma dan Pemrograman' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Berpikir Komputasional (Searching & Sorting)', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Algoritma Pemrograman Dasar', tpKode: 'TP 2.4', pertemuan: '5 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Berpikir Komputasional (Searching & Sorting)', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Algoritma Pemrograman Dasar', tpKode: 'TP 2.4', pertemuan: '5 Pertemuan (14 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   },
   'PAI & Budi Pekerti': {
@@ -146,8 +228,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Memahami Ketentuan Ibadah Puasa, Zakat, dan Sejarah Peradaban Islam Nusantara', jp: 12, status: 'DRAFT', elemen: 'Fikih & Sejarah Peradaban Islam' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Indahnya Toleransi & Moderasi Beragama', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Contextual Teaching & Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Meneladani Sifat Amanah & Kejujuran', tpKode: 'TP 2.3', pertemuan: '3 Pertemuan (10 JP)', model: 'Discovery Learning', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Indahnya Toleransi & Moderasi Beragama', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Contextual Teaching & Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Meneladani Sifat Amanah & Kejujuran', tpKode: 'TP 2.3', pertemuan: '3 Pertemuan (10 JP)', model: 'Discovery Learning', status: 'Siap Unduh' }
     ]
   },
   'PJOK': {
@@ -159,8 +241,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Menerapkan Budaya Hidup Sehat, Gizi Seimbang, dan Pencegahan Cedera', jp: 8, status: 'DRAFT', elemen: 'Memilih Hidup yang Menyehatkan' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Teknik Dasar & Strategi Permainan Bola Basket/Voli', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Teaching Games for Understanding', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Tes & Pengukuran Kebugaran Jasmani Siswa', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (12 JP)', model: 'Practice Style', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Teknik Dasar & Strategi Permainan Bola Basket/Voli', tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Teaching Games for Understanding', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Tes & Pengukuran Kebugaran Jasmani Siswa', tpKode: 'TP 2.3', pertemuan: '4 Pertemuan (12 JP)', model: 'Practice Style', status: 'Siap Unduh' }
     ]
   },
   'Ekonomi': {
@@ -172,8 +254,8 @@ const SUBJECT_BANK = {
       { kode: 'TP 2.4', judul: 'Menyusun Siklus Akuntansi Perusahaan Jasa dan Laporan Laba Rugi Sederhana', jp: 16, status: 'DRAFT', elemen: 'Keterampilan Proses' }
     ],
     moduls: [
-      { judul: 'Modul Ajar: Analisis Pendapatan Nasional & Pertumbuhan', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (12 JP)', model: 'Case-Based Learning', status: 'Siap Cetak' },
-      { judul: 'Modul Ajar: Praktik Siklus Akuntansi Perusahaan Jasa', tpKode: 'TP 2.4', pertemuan: '4 Pertemuan (16 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Cetak' }
+      { judul: 'Modul Ajar: Analisis Pendapatan Nasional & Pertumbuhan', tpKode: 'TP 2.1', pertemuan: '3 Pertemuan (12 JP)', model: 'Case-Based Learning', status: 'Siap Unduh' },
+      { judul: 'Modul Ajar: Praktik Siklus Akuntansi Perusahaan Jasa', tpKode: 'TP 2.4', pertemuan: '4 Pertemuan (16 JP)', model: 'Project-Based Learning (PjBL)', status: 'Siap Unduh' }
     ]
   }
 };
@@ -212,7 +294,7 @@ const createClassObject = (id, nama, fase, mapel, kelas, customStudents = null) 
   const modulAjar = bank
     ? bank.moduls.map((m, idx) => ({ ...m, id: `ma-${id}-${idx + 1}` }))
     : [
-        { id: `ma-${id}-1`, judul: `Modul Ajar: Konsep & Aplikasi ${mapel} (Kelas ${kelas})`, tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Cetak' }
+        { id: `ma-${id}-1`, judul: `Modul Ajar: Konsep & Aplikasi ${mapel} (Kelas ${kelas})`, tpKode: 'TP 2.1', pertemuan: '4 Pertemuan (12 JP)', model: 'Problem-Based Learning (PBL)', status: 'Siap Unduh' }
       ];
 
   const studentsList = customStudents && customStudents.length > 0 ? customStudents : JSON.parse(JSON.stringify(DEFAULT_STUDENTS));
@@ -259,7 +341,6 @@ const loadSheetJSLibrary = () => {
 const extractStudentsFromRows = (rows) => {
   if (!Array.isArray(rows) || rows.length === 0) return [];
 
-  // Cari baris header (mengandung kata "nama")
   let headerIdx = -1;
   let nameCol = -1;
   let nisnCol = -1;
@@ -279,7 +360,6 @@ const extractStudentsFromRows = (rows) => {
     }
   }
 
-  // Fallback jika header tidak eksplisit ditemukan
   const startRow = headerIdx !== -1 ? headerIdx + 1 : 1;
   if (nameCol === -1) nameCol = 1;
   if (nisnCol === -1) nisnCol = 2;
@@ -323,11 +403,11 @@ const INITIAL_STATE = {
   },
   activeClassId: 'cls-smp-8b',
   classes: [
-    createClassObject('cls-smp-8b', 'Kelas 8 B - Bahasa Inggris', 'Fase D (Kelas 7-9 SMP)', 'Bahasa Inggris', '8')
+    createClassObject('cls-smp-8b', 'Kelas 8 B - Matematika', 'Fase D (Kelas 7-9 SMP)', 'Matematika', '8')
   ]
 };
 
-const STORAGE_KEY = 'eduadmin_saas_master_v5';
+const STORAGE_KEY = 'eduadmin_saas_word_v6';
 
 export default function App() {
   const [data, setData] = useState(() => {
@@ -349,10 +429,10 @@ export default function App() {
     fase: 'Fase D (Kelas 7-9 SMP)',
     kelas: '8',
     rombel: 'B',
-    mapel: 'Bahasa Inggris'
+    mapel: 'Matematika'
   });
-  const [importFormat, setImportFormat] = useState(null); // null | 'dapodik' | 'emis'
-  const [uploadedFile, setUploadedFile] = useState(null); // Kosong di awal (tanpa file contoh)
+  const [importFormat, setImportFormat] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [parsedStudents, setParsedStudents] = useState(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
   const fileInputRef = useRef(null);
@@ -409,13 +489,196 @@ export default function App() {
     setTimeout(() => setToast(null), 3200);
   };
 
+  // --- HANDLER EKSPOR WORD (.DOC) ---
+  const handleExportAtpWord = () => {
+    const totalJp = activeClass.tps.reduce((acc, item) => acc + (Number(item.jp) || 0), 0);
+    const rowsHtml = activeClass.tps
+      .map(
+        (tp, idx) => `
+        <tr>
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="text-align:center;"><strong>${tp.kode}</strong></td>
+          <td>${tp.elemen}</td>
+          <td>${tp.judul}</td>
+          <td style="text-align:center;">${tp.jp} JP</td>
+        </tr>`
+      )
+      .join('');
+
+    const body = `
+      <p><strong>A. CAPAIAN PEMBELAJARAN (CP)</strong></p>
+      <div class="box-cp">${activeClass.cpText}</div>
+      <p><strong>B. ALUR TUJUAN PEMBELAJARAN (ATP)</strong></p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:6%;">No</th>
+            <th style="width:12%;">Kode TP</th>
+            <th style="width:22%;">Elemen CP</th>
+            <th style="width:48%;">Tujuan Pembelajaran</th>
+            <th style="width:12%;">Alokasi</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+          <tr>
+            <td colspan="4" style="text-align:right;"><strong>Total Alokasi Waktu</strong></td>
+            <td style="text-align:center;"><strong>${totalJp} JP</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    downloadWordDocument(`CP_ATP_${activeClass.nama.replace(/\s+/g, '_')}`, 'CAPAIAN & ALUR TUJUAN PEMBELAJARAN (ATP)', data.profile, activeClass, body);
+    showNotification('File Word CP & ATP (.doc) berhasil diunduh!');
+  };
+
+  const handleExportPromesWord = () => {
+    const rowsHtml = activeClass.tps
+      .map(
+        (tp, idx) => `
+        <tr>
+          <td style="text-align:center;"><strong>${tp.kode}</strong></td>
+          <td>${tp.judul}</td>
+          <td style="text-align:center;">${tp.jp} JP</td>
+          <td style="text-align:center;">${idx === 0 ? 'V' : ''}</td>
+          <td style="text-align:center;">${idx === 0 || idx === 1 ? 'V' : ''}</td>
+          <td style="text-align:center;">${idx === 1 || idx === 2 ? 'V' : ''}</td>
+          <td style="text-align:center;">${idx === 2 || idx === 3 ? 'V' : ''}</td>
+          <td style="text-align:center;">${idx >= 3 ? 'V' : ''}</td>
+        </tr>`
+      )
+      .join('');
+
+    const body = `
+      <p><strong>DISTRIBUSI ALOKASI WAKTU PROGRAM SEMESTER (PROMES)</strong></p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:12%;">Kode</th>
+            <th style="width:48%;">Tujuan Pembelajaran / Materi Pokok</th>
+            <th style="width:10%;">JP</th>
+            <th style="width:6%;">Jan</th>
+            <th style="width:6%;">Feb</th>
+            <th style="width:6%;">Mar</th>
+            <th style="width:6%;">Apr</th>
+            <th style="width:6%;">Mei</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+    downloadWordDocument(`Promes_${activeClass.nama.replace(/\s+/g, '_')}`, 'PROGRAM SEMESTER (PROMES)', data.profile, activeClass, body);
+    showNotification('File Word Program Semester (.doc) berhasil diunduh!');
+  };
+
+  const handleExportModulWord = (modul) => {
+    const relatedTp = activeClass.tps.find((t) => t.kode === modul.tpKode) || activeClass.tps[0];
+    const body = `
+      <p><strong>I. INFORMASI UMUM</strong></p>
+      <table class="data-table">
+        <tr><td style="width:30%;"><strong>Judul Modul Ajar</strong></td><td>${modul.judul}</td></tr>
+        <tr><td><strong>Alokasi Waktu</strong></td><td>${modul.pertemuan}</td></tr>
+        <tr><td><strong>Model Pembelajaran</strong></td><td>${modul.model}</td></tr>
+        <tr><td><strong>Profil Pelajar Pancasila</strong></td><td>Beriman & Bertakwa, Bernalar Kritis, Mandiri, Gotong Royong</td></tr>
+      </table>
+
+      <p style="margin-top:14px;"><strong>II. KOMPONEN INTI</strong></p>
+      <table class="data-table">
+        <tr><td style="width:30%;"><strong>Tujuan Pembelajaran (${modul.tpKode})</strong></td><td>${relatedTp ? relatedTp.judul : modul.judul}</td></tr>
+        <tr><td><strong>Pemahaman Bermakna</strong></td><td>Peserta didik mampu menghubungkan konsep ${activeClass.mapel} dengan pemecahan masalah nyata dalam kehidupan sehari-hari.</td></tr>
+        <tr><td><strong>Kegiatan Pendahuluan (15 Menit)</strong></td><td>Guru membuka pelajaran dengan salam, doa, presensi, apersepsi kontekstual, dan menyampaikan tujuan pembelajaran.</td></tr>
+        <tr><td><strong>Kegiatan Inti (60 Menit)</strong></td><td>Peserta didik mengamati stimulus masalah, berdiskusi dalam kelompok kecil menggunakan LKPD, mengolah data/informasi, dan mempresentasikan hasilnya dengan model <em>${modul.model}</em>.</td></tr>
+        <tr><td><strong>Kegiatan Penutup (15 Menit)</strong></td><td>Guru dan peserta didik menyimpulkan materi, melakukan refleksi pembelajaran, serta menyampaikan rencana pertemuan berikutnya.</td></tr>
+        <tr><td><strong>Asesmen / Penilaian</strong></td><td>Asesmen Diagnostik (Awal), Asesmen Formatif (Observasi & LKPD), dan Asesmen Sumatif Lingkup Materi.</td></tr>
+      </table>
+    `;
+    downloadWordDocument(`Modul_Ajar_${modul.tpKode.replace(/\s+/g, '_')}`, 'MODUL AJAR KURIKULUM MERDEKA', data.profile, activeClass, body);
+    showNotification(`File Word "${modul.judul}" (.doc) berhasil diunduh!`);
+  };
+
+  const handleExportPresensiWord = () => {
+    const rowsHtml = activeClass.students
+      .map(
+        (s, idx) => `
+        <tr>
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="text-align:center;">${s.nisn}</td>
+          <td>${s.nama}</td>
+          <td style="text-align:center;">${s.jk}</td>
+          <td style="text-align:center;"><strong>${s.statusHadir}</strong></td>
+          <td>${s.statusHadir === 'H' ? 'Hadir' : s.statusHadir === 'S' ? 'Sakit' : s.statusHadir === 'I' ? 'Izin' : 'Alpa'}</td>
+        </tr>`
+      )
+      .join('');
+
+    const body = `
+      <p><strong>REKAPITULASI KEHADIRAN PESERTA DIDIK</strong></p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:6%;">No</th>
+            <th style="width:18%;">NISN</th>
+            <th style="width:38%;">Nama Lengkap Siswa</th>
+            <th style="width:8%;">L/P</th>
+            <th style="width:10%;">Kode</th>
+            <th style="width:20%;">Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+    downloadWordDocument(`Presensi_${activeClass.nama.replace(/\s+/g, '_')}`, 'DAFTAR HADIR PESERTA DIDIK', data.profile, activeClass, body);
+    showNotification('File Word Daftar Hadir (.doc) berhasil diunduh!');
+  };
+
+  const handleExportNilaiWord = () => {
+    const rowsHtml = activeClass.students
+      .map((s, idx) => {
+        const akhir = Math.round((Number(s.f1) + Number(s.f2) + Number(s.sumatif)) / 3);
+        const predikat = akhir >= 90 ? 'A (Sangat Baik)' : akhir >= 80 ? 'B (Baik)' : 'C (Cukup)';
+        return `
+        <tr>
+          <td style="text-align:center;">${idx + 1}</td>
+          <td style="text-align:center;">${s.nisn}</td>
+          <td>${s.nama}</td>
+          <td style="text-align:center;">${s.f1}</td>
+          <td style="text-align:center;">${s.f2}</td>
+          <td style="text-align:center;">${s.sumatif}</td>
+          <td style="text-align:center;"><strong>${akhir}</strong></td>
+          <td style="text-align:center;">${predikat}</td>
+        </tr>`;
+      })
+      .join('');
+
+    const body = `
+      <p><strong>LEGER PENILAIAN FORMATIF & SUMATIF (e-RAPOR)</strong></p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:5%;">No</th>
+            <th style="width:15%;">NISN</th>
+            <th style="width:30%;">Nama Siswa</th>
+            <th style="width:9%;">Form. 1</th>
+            <th style="width:9%;">Form. 2</th>
+            <th style="width:10%;">Sumatif</th>
+            <th style="width:10%;">Rapor</th>
+            <th style="width:12%;">Predikat</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+    downloadWordDocument(`Leger_Nilai_${activeClass.nama.replace(/\s+/g, '_')}`, 'DAFTAR NILAI PESERTA DIDIK', data.profile, activeClass, body);
+    showNotification('File Word Leger Nilai (.doc) berhasil diunduh!');
+  };
+
   // --- HANDLER LOGIN ---
   const handleLogin = (e) => {
     e.preventDefault();
     setData((prev) => ({ ...prev, isLoggedIn: true }));
   };
 
-  // --- HANDLER WIZARD IMPOR DAPODIK & EMIS (.XLSX / .XLS / .CSV) ---
+  // --- HANDLER WIZARD IMPOR DAPODIK & EMIS ---
   const handleSelectFormat = (format) => {
     setImportFormat(format);
     if (fileInputRef.current) {
@@ -674,7 +937,7 @@ export default function App() {
   }
 
   // ============================================================================
-  // TAMPILAN 2: WIZARD 3 LANGKAH (DATA KELAS -> IMPOR DAPODIK/EMIS -> PROSES)
+  // TAMPILAN 2: WIZARD 3 LANGKAH
   // ============================================================================
   if (!data.wizardCompleted) {
     const selectedFaseObj = FASE_LIST.find((f) => f.label === wizForm.fase) || FASE_LIST[3];
@@ -717,7 +980,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* LANGKAH 1: PILIH JENJANG, KELAS, & MATA PELAJARAN */}
           {wizardStep === 1 && (
             <div className="p-8 space-y-5">
               <div>
@@ -806,7 +1068,6 @@ export default function App() {
             </div>
           )}
 
-          {/* LANGKAH 2: IMPOR DATA PESERTA DIDIK (FORMAT DAPODIK & EMIS AKTIF, TANPA FILE CONTOH) */}
           {wizardStep === 2 && (
             <div className="p-8 space-y-6">
               <div>
@@ -925,7 +1186,6 @@ export default function App() {
             </div>
           )}
 
-          {/* LANGKAH 3: PROSES */}
           {wizardStep === 3 && (
             <div className="p-12 text-center space-y-3">
               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -941,7 +1201,7 @@ export default function App() {
   }
 
   // ============================================================================
-  // TAMPILAN 3: DASHBOARD UTAMA (SEMUA TINGKATAN FASE A - F)
+  // TAMPILAN 3: DASHBOARD UTAMA (DENGAN EKSPOR MICROSOFT WORD .DOC)
   // ============================================================================
   const menuItems = [
     { id: 'beranda', label: 'Beranda', icon: LayoutDashboard, group: 'UTAMA' },
@@ -1123,7 +1383,7 @@ export default function App() {
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <div className="text-xs font-semibold text-slate-400 uppercase">Modul Ajar</div>
                   <div className="text-2xl font-bold text-slate-800 mt-1">{activeClass.modulAjar.length} Modul</div>
-                  <div className="text-xs text-blue-600 mt-1 font-medium">{activeClass.fase}</div>
+                  <div className="text-xs text-blue-600 mt-1 font-medium">Siap unduh format Word (.doc)</div>
                 </div>
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <div className="text-xs font-semibold text-slate-400 uppercase">Jumlah Siswa</div>
@@ -1191,10 +1451,10 @@ export default function App() {
                     <p className="text-xs text-slate-500 mt-0.5">Total Alokasi Waktu: {totalJp} Jam Pelajaran (JP)</p>
                   </div>
                   <button
-                    onClick={() => window.print()}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
+                    onClick={handleExportAtpWord}
+                    className="px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 flex items-center gap-1.5 shadow-xs cursor-pointer"
                   >
-                    <Printer className="w-3.5 h-3.5" /> Cetak ATP
+                    <FileDown className="w-3.5 h-3.5" /> Unduh Word (.doc)
                   </button>
                 </div>
 
@@ -1326,10 +1586,10 @@ export default function App() {
                   </p>
                 </div>
                 <button
-                  onClick={() => window.print()}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
+                  onClick={handleExportPromesWord}
+                  className="px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5" /> Cetak Promes
+                  <FileDown className="w-3.5 h-3.5" /> Unduh Word (.doc)
                 </button>
               </div>
               <div className="overflow-x-auto">
@@ -1370,7 +1630,7 @@ export default function App() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Modul Ajar Kurikulum Merdeka ({activeClass.fase})</h2>
-                <p className="text-xs text-slate-500">Perangkat pembelajaran sesuai tingkat {activeClass.nama}</p>
+                <p className="text-xs text-slate-500">Klik tombol di bawah kartu untuk mengunduh dokumen Microsoft Word (.doc) siap edit.</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {activeClass.modulAjar.map((modul) => (
@@ -1393,10 +1653,10 @@ export default function App() {
                       </div>
                     </div>
                     <button
-                      onClick={() => window.print()}
-                      className="mt-5 w-full py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5"
+                      onClick={() => handleExportModulWord(modul)}
+                      className="mt-5 w-full py-2.5 rounded-xl bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Printer className="w-3.5 h-3.5" /> Cetak / Unduh PDF
+                      <FileDown className="w-3.5 h-3.5" /> Unduh Word (.doc)
                     </button>
                   </div>
                 ))}
@@ -1537,10 +1797,10 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => window.print()}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1"
+                        onClick={handleExportPresensiWord}
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 flex items-center gap-1 cursor-pointer"
                       >
-                        <Printer className="w-3.5 h-3.5" /> Cetak
+                        <FileDown className="w-3.5 h-3.5" /> Unduh Word
                       </button>
                       <span className="px-3 py-1.5 rounded-lg bg-slate-100 text-xs font-bold text-slate-700">
                         Total: {activeClass.students.length}
@@ -1612,10 +1872,10 @@ export default function App() {
                   <p className="text-xs text-slate-500">Klik angka nilai untuk mengedit langsung; Nilai Akhir dihitung otomatis.</p>
                 </div>
                 <button
-                  onClick={() => window.print()}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
+                  onClick={handleExportNilaiWord}
+                  className="px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5" /> Cetak Leger Nilai
+                  <FileDown className="w-3.5 h-3.5" /> Unduh Word (.doc)
                 </button>
               </div>
 
@@ -1684,7 +1944,7 @@ export default function App() {
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm max-w-2xl space-y-5">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Pengaturan Identitas Guru & Sistem</h2>
-                <p className="text-xs text-slate-500">Perubahan tersimpan otomatis di browser Anda.</p>
+                <p className="text-xs text-slate-500">Identitas ini otomatis muncul pada kop dan tanda tangan file Word (.doc).</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1901,7 +2161,7 @@ export default function App() {
                 onChange={(e) => setRombelForm({ ...rombelForm, mapel: e.target.value })}
                 className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm bg-white"
               >
-                {selectedRombelFaseObj.mapels.map((m) => (
+                {selectedRombelFaseObj.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
